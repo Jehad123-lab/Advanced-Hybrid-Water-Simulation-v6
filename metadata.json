@@ -1,0 +1,5 @@
+{
+  "name": "Remix: Advanced Hybrid Water Simulation v6",
+  "description": "High-fidelity water simulation with procedural waves, ripple physics, and debug visualization tools.",
+  "requestFramePermissions": []
+}
