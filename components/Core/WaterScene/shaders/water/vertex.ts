@@ -108,6 +108,7 @@ float getBlendedWaveHeight(vec2 p) {
 }
 
 float getSmallWaves(vec2 pos) {
+    if (uWaveHeight <= 0.001) return 0.0;
     vec2 p = pos * uWaveScale * 0.02;
     float t = uTime * uWaveSpeed * 0.5;
     float waves = sin(p.x * 5.0 + t * 2.0) * uWaveHeight * 0.5;

@@ -434,6 +434,8 @@ const WaterScene: React.FC<WaterSceneProps> = ({ config, initialCameraState, sce
 
             // Layer A
             u.uWaveHeight.value = THREE.MathUtils.lerp(u.uWaveHeight.value, target.waveHeight, lerpFactor);
+            if (Math.abs(u.uWaveHeight.value - target.waveHeight) < 0.001) u.uWaveHeight.value = target.waveHeight;
+            
             u.uWaveSpeed.value = THREE.MathUtils.lerp(u.uWaveSpeed.value, target.waveSpeed, lerpFactor);
             u.uWaveScale.value = THREE.MathUtils.lerp(u.uWaveScale.value, target.waveScale, lerpFactor);
             u.uNormalFlatness.value = THREE.MathUtils.lerp(u.uNormalFlatness.value, target.normalFlatness, lerpFactor);
@@ -445,6 +447,8 @@ const WaterScene: React.FC<WaterSceneProps> = ({ config, initialCameraState, sce
             u.uNoiseBlendAB.value = THREE.MathUtils.lerp(u.uNoiseBlendAB.value, target.noiseBlendAB, lerpFactor);
             u.uNoiseTypeB.value = noiseMap[target.noiseTypeB] ?? 1;
             u.uWaveHeightB.value = THREE.MathUtils.lerp(u.uWaveHeightB.value, target.waveHeightB, lerpFactor);
+            if (Math.abs(u.uWaveHeightB.value - target.waveHeightB) < 0.001) u.uWaveHeightB.value = target.waveHeightB;
+
             u.uWaveSpeedB.value = THREE.MathUtils.lerp(u.uWaveSpeedB.value, target.waveSpeedB, lerpFactor);
             u.uWaveScaleB.value = THREE.MathUtils.lerp(u.uWaveScaleB.value, target.waveScaleB, lerpFactor);
 
@@ -454,6 +458,8 @@ const WaterScene: React.FC<WaterSceneProps> = ({ config, initialCameraState, sce
             u.uNoiseBlendBC.value = THREE.MathUtils.lerp(u.uNoiseBlendBC.value, target.noiseBlendBC, lerpFactor);
             u.uNoiseTypeC.value = noiseMap[target.noiseTypeC] ?? 0;
             u.uWaveHeightC.value = THREE.MathUtils.lerp(u.uWaveHeightC.value, target.waveHeightC, lerpFactor);
+            if (Math.abs(u.uWaveHeightC.value - target.waveHeightC) < 0.001) u.uWaveHeightC.value = target.waveHeightC;
+
             u.uWaveSpeedC.value = THREE.MathUtils.lerp(u.uWaveSpeedC.value, target.waveSpeedC, lerpFactor);
             u.uWaveScaleC.value = THREE.MathUtils.lerp(u.uWaveScaleC.value, target.waveScaleC, lerpFactor);
 
