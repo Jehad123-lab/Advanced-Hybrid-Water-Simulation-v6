@@ -51,7 +51,7 @@ const MetaPrototype = () => {
 
   // -- Water Simulation State --
   const [waterConfig, setWaterConfig] = useState<WaterConfig>({
-    skyboxUrl: "/sunny_rose_garden_1k.hdr",
+    skyboxUrl: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/evening_meadow_1k.hdr",
     sunIntensity: 1.2,
     colorShallow: "#e8e7e6",
     colorDeep: "#ede1e5",

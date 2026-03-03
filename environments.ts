@@ -10,10 +10,6 @@ export interface SkyboxOption {
 
 export const skyboxOptions: SkyboxOption[] = [
   {
-    name: 'Sunny Rose Garden',
-    url: '/sunny_rose_garden_1k.hdr',
-  },
-  {
     name: 'Qwantani Noon',
     url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/qwantani_noon_puresky_1k.hdr',
   },

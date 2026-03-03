@@ -801,7 +801,7 @@ const WaterScene: React.FC<WaterSceneProps> = ({ config, initialCameraState, sce
     const pmremGenerator = pmremGeneratorRef.current;
     
     // Use the provided HDR asset initially if skyboxUrl is not set or as a default
-    const hdrUrl = config.skyboxUrl || '/sunny_rose_garden_1k.hdr';
+    const hdrUrl = config.skyboxUrl || 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/evening_meadow_1k.hdr';
     
     // Skip if already loading or loaded this URL
     if (currentHdrUrlRef.current === hdrUrl) return;
