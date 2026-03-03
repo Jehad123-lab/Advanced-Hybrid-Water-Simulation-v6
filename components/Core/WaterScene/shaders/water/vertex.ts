@@ -57,15 +57,16 @@ ${commonShaderUtils}
 
 float getProceduralNoiseHeight(int noiseType, vec2 p, float speed, float height) {
     vec2 pos = p + vec2(uTime * speed * 0.5, uTime * speed * 0.5 * 0.4);
+    float val = 0.0;
     
     if (noiseType == 0) { // Simplex FBM
-        return simplex_fbm(pos, 2, 0.5, 2.0) * height;
+        val = simplex_fbm(pos, 2, 0.5, 2.0) * height;
     } else if (noiseType == 1) { // Perlin FBM
-        return perlin_fbm(pos, 2, 0.5, 2.0) * height;
+        val = perlin_fbm(pos, 2, 0.5, 2.0) * height;
     } else if (noiseType == 2) { // Voronoi
-        return (voronoi(pos * 0.5, uTime * speed) * 2.0 - 1.0) * height;
+        val = (voronoi(pos * 0.5, uTime * speed) * 2.0 - 1.0) * height;
     }
-    return 0.0;
+    return val;
 }
 
 float blend_heights(float h1, float h2, int mode, float mix_amount) {

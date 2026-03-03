@@ -76,15 +76,16 @@ vec3 getSkyColor(vec3 dir) {
 
 float getProceduralNoiseValue(int noiseType, vec2 p, float speed) {
     vec2 pos = p + vec2(uTime * speed * 0.5, uTime * speed * 0.5 * 0.4);
+    float val = 0.0;
     
     if (noiseType == 0) { // Simplex FBM
-        return simplex_fbm(pos, 2, 0.5, 2.0);
+        val = simplex_fbm(pos, 2, 0.5, 2.0);
     } else if (noiseType == 1) { // Perlin FBM
-        return perlin_fbm(pos, 2, 0.5, 2.0);
+        val = perlin_fbm(pos, 2, 0.5, 2.0);
     } else if (noiseType == 2) { // Voronoi
-        return (voronoi(pos * 0.5, uTime * speed) * 2.0 - 1.0);
+        val = (voronoi(pos * 0.5, uTime * speed) * 2.0 - 1.0);
     }
-    return 0.0;
+    return val;
 }
 
 vec3 getColorFromRamp(float t) {
