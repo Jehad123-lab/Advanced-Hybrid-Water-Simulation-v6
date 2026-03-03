@@ -336,7 +336,6 @@ const WaterScene: React.FC<WaterSceneProps> = ({ config, initialCameraState, sce
             uRippleIntensity: { value: configRef.current.rippleIntensity },
             uRippleNormalIntensity: { value: configRef.current.rippleNormalIntensity },
             uResolution: { value: new THREE.Vector2(simSize, simSize) },
-            uPlaneSize: { value: 4000.0 },
             tSky: { value: defaultTex },
             // Normal Map Uniforms
             tNormalMap: { value: normalMapTexture },

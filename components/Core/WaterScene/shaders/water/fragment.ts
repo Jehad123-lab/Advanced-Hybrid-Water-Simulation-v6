@@ -171,7 +171,7 @@ void main() {
 
     if (gl_FrontFacing) {
         // --- SURFACE (Looking Down) ---
-        vec3 refDir = reflect(-viewDir, faceNormal);
+        vec3 refDir = reflect(viewDir, faceNormal);
         
         // Sample HDR Skybox for Reflection
         vec3 reflection = getSkyColor(refDir);
@@ -226,7 +226,7 @@ void main() {
         gl_FragColor = vec4(finalColor, uTransparency);
     } else {
         // --- UNDERWATER (Looking Up) ---
-        vec3 I = -viewDir;
+        vec3 I = viewDir;
         vec3 N = faceNormal;
         float eta = 1.0 / uIOR; // Water to Air
 

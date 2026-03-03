@@ -215,10 +215,8 @@ void main() {
     // Normal calculation
     vNormal = calculateTotalNormal(worldPosition.xz, uv);
     
-    // Calculate View Position in World Space for correct lighting/reflection
-    vViewPosition = cameraPosition - vWorldPos;
-    
     vec4 mvPosition = viewMatrix * finalWorldPos;
+    vViewPosition = -mvPosition.xyz;
     gl_Position = projectionMatrix * mvPosition;
 }
 `;
