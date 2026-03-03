@@ -107,6 +107,13 @@ float getBlendedWaveHeight(vec2 p) {
     return heightABC;
 }
 
+float getSmallWaves(vec2 pos) {
+    vec2 p = pos * uWaveScale * 0.02;
+    float t = uTime * uWaveSpeed * 0.5;
+    float waves = sin(p.x * 5.0 + t * 2.0) * uWaveHeight * 0.5;
+    waves += cos(p.y * 4.0 + t * 2.5) * uWaveHeight * 0.5;
+    return waves;
+}
 
 vec3 calculateTotalNormal(vec2 pos, vec2 uv) {
     // World space epsilon for FBM waves
@@ -125,9 +132,9 @@ vec3 calculateTotalNormal(vec2 pos, vec2 uv) {
     float fbm_dampening = 1.0 - smoothstep(0.0, 0.5, ripple_magnitude * uRippleNormalIntensity);
     
     // 3. Calculate Base Blended Wave Height with dampening
-    float h_base = getBlendedWaveHeight(pos) * fbm_dampening;
-    float h_base_x = getBlendedWaveHeight(pos + vec2(e, 0.0)) * fbm_dampening;
-    float h_base_z = getBlendedWaveHeight(pos + vec2(0.0, e)) * fbm_dampening;
+    float h_base = getBlendedWaveHeight(pos) * fbm_dampening + getSmallWaves(pos);
+    float h_base_x = getBlendedWaveHeight(pos + vec2(e, 0.0)) * fbm_dampening + getSmallWaves(pos + vec2(e, 0.0));
+    float h_base_z = getBlendedWaveHeight(pos + vec2(0.0, e)) * fbm_dampening + getSmallWaves(pos + vec2(0.0, e));
     
     // 4. Combine Heights for Normal Calculation
     float h = h_base + r_val * uRippleNormalIntensity;
@@ -156,10 +163,7 @@ void main() {
     float main_displacement = getBlendedWaveHeight(worldPosition.xz);
     
     // 4. Calculate small ambient waves (add on top of main displacement)
-    vec2 p = worldPosition.xz * uWaveScale * 0.02;
-    float t = uTime * uWaveSpeed * 0.5;
-    float small_waves = sin(p.x * 5.0 + t * 2.0) * uWaveHeight * 0.5;
-    small_waves += cos(p.y * 4.0 + t * 2.5) * uWaveHeight * 0.5;
+    float small_waves = getSmallWaves(worldPosition.xz);
 
     // 5. Texture-based displacement
     float texture_displacement = 0.0;
@@ -169,7 +173,7 @@ void main() {
     }
 
     // 5.5 High-frequency chop
-    float chop = snoise(worldPosition.xz * 2.0 + uTime * 0.5) * 0.1 * uWaveHeight;
+    float chop = snoise(worldPosition.xz * 2.0 + uTime * 0.5) * 0.1 * uWaveHeight * smoothstep(0.0, 0.5, uWaveHeight);
 
     // 6. Vertex-based ripple impacts
     float vertex_ripple_displacement = 0.0;
