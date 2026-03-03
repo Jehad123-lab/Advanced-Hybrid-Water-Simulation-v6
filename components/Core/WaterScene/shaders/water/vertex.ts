@@ -51,7 +51,6 @@ uniform vec4 uVertexImpacts[MAX_IMPACTS]; // x, z, strength, startTime
 
 varying vec3 vWorldPos;
 varying vec3 vViewPosition;
-varying vec3 vWorldViewDir;
 varying vec3 vNormal;
 varying float vElevation;
 ${commonShaderUtils}
@@ -118,69 +117,33 @@ float getSmallWaves(vec2 pos) {
     return waves;
 }
 
-float getVertexRippleDisplacement(vec2 pos) {
-    float displacement = 0.0;
-    if (uUseVertexImpacts && uVertexImpactCount > 0) {
-        for (int i = 0; i < MAX_IMPACTS; i++) {
-            if (i >= uVertexImpactCount) break;
-            vec4 impact = uVertexImpacts[i];
-            float age = uTime - impact.w;
-            if (age > 0.0 && age < 5.0) {
-                float dist = distance(pos, impact.xy);
-                float speed = 30.0;
-                float frequency = 0.2;
-                float wave = sin(dist * frequency - age * speed);
-                float pulse_width = 15.0;
-                float pulse_envelope = smoothstep(0.0, pulse_width, dist - age * speed) * (1.0 - smoothstep(pulse_width, pulse_width + 1.0, dist - age * speed));
-                float falloff_time = 1.0 - smoothstep(2.0, 4.0, age);
-                displacement += wave * pulse_envelope * impact.z * falloff_time * 5.0;
-            }
-        }
-    }
-    return displacement;
-}
-
-float getSurfaceHeight(vec2 pos, vec2 uv) {
-    // 1. Ripple
-    float ripple = texture2D(tRipple, uv).r;
-    float ripple_magnitude = abs(ripple);
-    float fbm_dampening = 1.0 - smoothstep(0.0, 0.5, ripple_magnitude * uRippleNormalIntensity);
-
-    // 2. Procedural
-    float main_disp = getBlendedWaveHeight(pos);
-    float small_waves = getSmallWaves(pos);
-    
-    // 3. Texture Disp
-    float tex_disp = 0.0;
-    if (uUseDisplacement) {
-        vec2 disp_uv = pos * 0.05 + uTime * uDisplacementSpeed;
-        tex_disp = texture2D(tDisplacementMap, disp_uv).r * uDisplacementStrength * 10.0;
-    }
-
-    // 4. Chop
-    float chop = snoise(pos * 2.0 + uTime * 0.5) * 0.1 * uWaveHeight * smoothstep(0.0, 0.5, uWaveHeight);
-
-    // 5. Vertex Ripple
-    float vert_ripple = getVertexRippleDisplacement(pos);
-
-    // Combine
-    float total = (main_disp * fbm_dampening) + small_waves + chop + tex_disp + vert_ripple + (ripple * uRippleNormalIntensity);
-    
-    return clamp(total, -50.0, 50.0);
-}
-
 vec3 calculateTotalNormal(vec2 pos, vec2 uv) {
-    // World space epsilon for finite difference
-    float e = 0.1; 
+    // World space epsilon for FBM waves
+    float e = 0.5; 
     
-    // Texture space epsilon for Ripple texture
+    // Texture space epsilon for Ripple texture (1 pixel)
     vec2 texelSize = 1.0 / uResolution; 
 
-    float h = getSurfaceHeight(pos, uv);
-    float hx = getSurfaceHeight(pos + vec2(e, 0.0), uv + vec2(texelSize.x, 0.0));
-    float hz = getSurfaceHeight(pos + vec2(0.0, e), uv + vec2(0.0, texelSize.y));
+    // 1. Sample Ripple Data
+    float r_val = texture2D(tRipple, uv).r;
+    float r_x_val = texture2D(tRipple, uv + vec2(texelSize.x, 0.0)).r;
+    float r_z_val = texture2D(tRipple, uv + vec2(0.0, texelSize.y)).r;
     
-    // Compute Finite Difference Vectors
+    // 2. Calculate FBM Dampening based on ripple strength
+    float ripple_magnitude = abs(r_val);
+    float fbm_dampening = 1.0 - smoothstep(0.0, 0.5, ripple_magnitude * uRippleNormalIntensity);
+    
+    // 3. Calculate Base Blended Wave Height with dampening
+    float h_base = getBlendedWaveHeight(pos) * fbm_dampening + getSmallWaves(pos);
+    float h_base_x = getBlendedWaveHeight(pos + vec2(e, 0.0)) * fbm_dampening + getSmallWaves(pos + vec2(e, 0.0));
+    float h_base_z = getBlendedWaveHeight(pos + vec2(0.0, e)) * fbm_dampening + getSmallWaves(pos + vec2(0.0, e));
+    
+    // 4. Combine Heights for Normal Calculation
+    float h = h_base + r_val * uRippleNormalIntensity;
+    float hx = h_base_x + r_x_val * uRippleNormalIntensity;
+    float hz = h_base_z + r_z_val * uRippleNormalIntensity;
+    
+    // 5. Compute Finite Difference Vectors
     vec3 v1 = vec3(e, hx - h, 0.0);
     vec3 v2 = vec3(0.0, hz - h, e);
     
@@ -191,9 +154,59 @@ void main() {
     vec3 pos = position;
     vec4 worldPosition = modelMatrix * vec4(pos, 1.0);
     
-    // Calculate total displacement using unified function
-    float total_displacement = getSurfaceHeight(worldPosition.xz, uv);
-    pos.y += total_displacement;
+    // 1. Sample Ripple
+    float ripple_height = texture2D(tRipple, uv).r;
+    
+    // 2. Calculate FBM dampening factor
+    float ripple_magnitude = abs(ripple_height);
+    float fbm_dampening = 1.0 - smoothstep(0.0, 0.5, ripple_magnitude * 5.0); // Use a sensible default value
+
+    // 3. Calculate blended procedural waves
+    float main_displacement = getBlendedWaveHeight(worldPosition.xz);
+    
+    // 4. Calculate small ambient waves (add on top of main displacement)
+    float small_waves = getSmallWaves(worldPosition.xz);
+
+    // 5. Texture-based displacement
+    float texture_displacement = 0.0;
+    if (uUseDisplacement) {
+        vec2 disp_uv = worldPosition.xz * 0.05 + uTime * uDisplacementSpeed;
+        texture_displacement = texture2D(tDisplacementMap, disp_uv).r * uDisplacementStrength * 10.0;
+    }
+
+    // 5.5 High-frequency chop
+    float chop = snoise(worldPosition.xz * 2.0 + uTime * 0.5) * 0.1 * uWaveHeight * smoothstep(0.0, 0.5, uWaveHeight);
+
+    // 6. Vertex-based ripple impacts
+    float vertex_ripple_displacement = 0.0;
+    if (uUseVertexImpacts && uVertexImpactCount > 0) {
+        for (int i = 0; i < MAX_IMPACTS; i++) {
+            if (i >= uVertexImpactCount) break;
+            vec4 impact = uVertexImpacts[i];
+            float age = uTime - impact.w;
+            if (age > 0.0 && age < 5.0) {
+                float dist = distance(worldPosition.xz, impact.xy);
+                
+                float speed = 30.0;
+                float frequency = 0.2;
+                
+                float wave = sin(dist * frequency - age * speed);
+                
+                float pulse_width = 15.0;
+                float pulse_envelope = smoothstep(0.0, pulse_width, dist - age * speed) * (1.0 - smoothstep(pulse_width, pulse_width + 1.0, dist - age * speed));
+                
+                float falloff_time = 1.0 - smoothstep(2.0, 4.0, age);
+                
+                vertex_ripple_displacement += wave * pulse_envelope * impact.z * falloff_time * 5.0;
+            }
+        }
+    }
+
+    // 7. Apply dampening and combine all displacements
+    float procedural_displacement = (main_displacement * fbm_dampening) + small_waves;
+    float ripple_displacement = ripple_height * 5.0; // Use a sensible default value
+    float total_displacement = procedural_displacement + ripple_displacement + texture_displacement + vertex_ripple_displacement + chop;
+    pos.y += clamp(total_displacement, -50.0, 50.0); // Clamp to prevent extreme values and flickering
 
     vElevation = pos.y;
     vec4 finalWorldPos = modelMatrix * vec4(pos, 1.0);
@@ -204,7 +217,6 @@ void main() {
     
     vec4 mvPosition = viewMatrix * finalWorldPos;
     vViewPosition = -mvPosition.xyz;
-    vWorldViewDir = cameraPosition - finalWorldPos.xyz;
     gl_Position = projectionMatrix * mvPosition;
 }
 `;

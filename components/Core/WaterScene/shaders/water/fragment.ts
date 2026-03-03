@@ -62,7 +62,6 @@ uniform float uColorRampNoiseMix;
 
 varying vec3 vWorldPos;
 varying vec3 vViewPosition;
-varying vec3 vWorldViewDir;
 varying vec3 vNormal;
 varying float vElevation;
 
@@ -106,7 +105,7 @@ vec3 getColorFromRamp(float t) {
 }
 
 void main() {
-    vec3 viewDir = normalize(vWorldViewDir);
+    vec3 viewDir = normalize(vViewPosition);
     vec3 normal = vNormal;
 
     if (uUseTextureNormals && uNormalMapStrength > 0.0) {
@@ -172,7 +171,7 @@ void main() {
 
     if (gl_FrontFacing) {
         // --- SURFACE (Looking Down) ---
-        vec3 refDir = reflect(-viewDir, faceNormal);
+        vec3 refDir = reflect(viewDir, faceNormal);
         
         // Sample HDR Skybox for Reflection
         vec3 reflection = getSkyColor(refDir);
